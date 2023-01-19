@@ -2,6 +2,8 @@
 
 const int SIZE = 17;
 const int MATRIX_SIZE = 4;
+const int EXPANDED_KEYS_SIZE = 176;
+const int KEY_SIZE = 16;
 
 const unsigned char mul2[] =
 {
@@ -43,7 +45,7 @@ const unsigned char mul3[] =
 	0x0b,0x08,0x0d,0x0e,0x07,0x04,0x01,0x02,0x13,0x10,0x15,0x16,0x1f,0x1c,0x19,0x1a
 };
 
-const int sBox[][16] =
+const int sBox[][KEY_SIZE] =
 {
 	0x63 ,0x7c ,0x77 ,0x7b ,0xf2 ,0x6b ,0x6f ,0xc5 ,0x30 ,0x01 ,0x67 ,0x2b ,0xfe ,0xd7 ,0xab ,0x76,
 	0xca ,0x82 ,0xc9 ,0x7d ,0xfa ,0x59 ,0x47 ,0xf0 ,0xad ,0xd4 ,0xa2 ,0xaf ,0x9c ,0xa4 ,0x72 ,0xc0,
@@ -62,6 +64,110 @@ const int sBox[][16] =
 	0xe1 ,0xf8 ,0x98 ,0x11 ,0x69 ,0xd9 ,0x8e ,0x94 ,0x9b ,0x1e ,0x87 ,0xe9 ,0xce ,0x55 ,0x28 ,0xdf,
 	0x8c ,0xa1 ,0x89 ,0x0d ,0xbf ,0xe6 ,0x42 ,0x68 ,0x41 ,0x99 ,0x2d ,0x0f ,0xb0 ,0x54 ,0xbb ,0x16
 };
+
+const int rcon[256] = {
+	0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a,
+	0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39,
+	0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a,
+	0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8,
+	0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef,
+	0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc,
+	0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b,
+	0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3,
+	0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94,
+	0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20,
+	0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35,
+	0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f,
+	0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04,
+	0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63,
+	0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd,
+	0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d
+};
+
+void print(int messageMatrix[MATRIX_SIZE][MATRIX_SIZE])
+{
+	for (size_t row = 0; row < MATRIX_SIZE; row++)
+	{
+		for (size_t col = 0; col < MATRIX_SIZE; col++)
+		{
+			std::cout << std::hex << messageMatrix[row][col] << " ";
+		}
+
+		std::cout << std::endl;
+	}
+}
+
+void KeyExpansionCore(int* word, int rconIndex) {
+	// Rotate left by one byte: shift left 
+	int t = word[0];
+	word[0] = word[1];
+	word[1] = word[2];
+	word[2] = word[3];
+	word[3] = t;
+
+	// S-box 4 bytes 
+
+	for (size_t j = 0; j < MATRIX_SIZE; j++)
+	{
+		int currentByte = word[j];
+
+		int sBoxRow = currentByte / 16;
+		int sBoxCol = currentByte % 16;
+
+		word[j] = sBox[sBoxRow][sBoxCol];
+	}
+
+	// RCon
+	word[0] ^= rcon[rconIndex];
+}
+
+void KeyExpansion(char inputKey[KEY_SIZE], int expandedKeys[EXPANDED_KEYS_SIZE]) {
+	// The first 128 bits are the original key
+	for (int i = 0; i < KEY_SIZE; i++) {
+		expandedKeys[i] = inputKey[i];
+	}
+
+	int bytesGenerated = KEY_SIZE; // Bytes we've generated so far
+	int rconIteration = 1; // Keeps track of rcon value
+	int tmpCore[MATRIX_SIZE]{ 0 }; // Temp storage for core
+
+	while (bytesGenerated < EXPANDED_KEYS_SIZE) {
+		/* Read 4 bytes for the core
+		* They are the previously generated 4 bytes
+		* Initially, these will be the final 4 bytes of the original key
+		*/
+		for (int i = 0; i < MATRIX_SIZE; i++) {
+			tmpCore[i] = expandedKeys[i + bytesGenerated - MATRIX_SIZE];
+		}
+
+		// Perform the core once for each 16 byte key
+		if (bytesGenerated % KEY_SIZE == 0) {
+			KeyExpansionCore(tmpCore, rconIteration++);
+		}
+
+		for (unsigned char a = 0; a < MATRIX_SIZE; a++) {
+			expandedKeys[bytesGenerated] = expandedKeys[bytesGenerated - KEY_SIZE] ^ tmpCore[a];
+			bytesGenerated++;
+		}
+
+	}
+}
+
+void subBytes(int messageMatrix[MATRIX_SIZE][MATRIX_SIZE])
+{
+	for (size_t row = 0; row < MATRIX_SIZE; row++)
+	{
+		for (size_t col = 0; col < MATRIX_SIZE; col++)
+		{
+			int currentByte = messageMatrix[row][col];
+
+			int sBoxRow = currentByte / 16;
+			int sBoxCol = currentByte % 16;
+
+			messageMatrix[row][col] = sBox[sBoxRow][sBoxCol];
+		}
+	}
+}
 
 void copyMatrix(int from[MATRIX_SIZE][MATRIX_SIZE], int to[MATRIX_SIZE][MATRIX_SIZE])
 {
@@ -115,22 +221,6 @@ void shiftRows(int messageMatrix[MATRIX_SIZE][MATRIX_SIZE])
 	}
 }
 
-void subBytes(int messageMatrix[MATRIX_SIZE][MATRIX_SIZE])
-{
-	for (size_t row = 0; row < MATRIX_SIZE; row++)
-	{
-		for (size_t col = 0; col < MATRIX_SIZE; col++)
-		{
-			int currentByte = messageMatrix[row][col];
-
-			int sBoxRow = currentByte / 16;
-			int sBoxCol = currentByte % 16;
-
-			messageMatrix[row][col] = sBox[sBoxRow][sBoxCol];
-		}
-	}
-}
-
 void addRoundKey(int messageMatrix[MATRIX_SIZE][MATRIX_SIZE], int keyMatrix[MATRIX_SIZE][MATRIX_SIZE])
 {
 	for (size_t row = 0; row < MATRIX_SIZE; row++)
@@ -140,6 +230,71 @@ void addRoundKey(int messageMatrix[MATRIX_SIZE][MATRIX_SIZE], int keyMatrix[MATR
 			messageMatrix[row][col] = (messageMatrix[row][col] ^ keyMatrix[row][col]);
 		}
 	}
+}
+
+void fillMatrix(int keyMatrix[MATRIX_SIZE][MATRIX_SIZE], int* currentKey)
+{
+	int  currentKeyIndex = 0;
+
+	for (size_t row = 0; row < MATRIX_SIZE; row++)
+	{
+		for (size_t col = 0; col < MATRIX_SIZE; col++)
+		{
+			keyMatrix[col][row] = currentKey[currentKeyIndex];
+			currentKeyIndex++;
+		}
+	}
+}
+
+void takeNextKey(int keyMatrix[MATRIX_SIZE][MATRIX_SIZE], int expandedKeys[EXPANDED_KEYS_SIZE], int& index)
+{
+	int currentKey[KEY_SIZE]{ 0 };
+	int keyIndex = 0;
+
+	int lastIndex = index + KEY_SIZE;
+
+	for (int i = index; i < lastIndex; i++)
+	{
+		currentKey[keyIndex] = expandedKeys[i];
+		keyIndex++;
+	}
+
+	fillMatrix(keyMatrix, currentKey);
+
+	index = lastIndex;
+}
+
+void middleRounds(int messageMatrix[MATRIX_SIZE][MATRIX_SIZE], int expandedKeys[EXPANDED_KEYS_SIZE], int keyMatrix[MATRIX_SIZE][MATRIX_SIZE])
+{
+	subBytes(messageMatrix);
+	shiftRows(messageMatrix);
+	mixColumns(messageMatrix);
+	addRoundKey(messageMatrix, keyMatrix);
+
+}
+
+void lastRound(int messageMatrix[MATRIX_SIZE][MATRIX_SIZE], int expandedKeys[EXPANDED_KEYS_SIZE], int keyMatrix[MATRIX_SIZE][MATRIX_SIZE])
+{
+	subBytes(messageMatrix);
+	shiftRows(messageMatrix);
+	addRoundKey(messageMatrix, keyMatrix);
+}
+
+void executeRounds(int messageMatrix[MATRIX_SIZE][MATRIX_SIZE], int expandedKeys[EXPANDED_KEYS_SIZE], int keyMatrix[MATRIX_SIZE][MATRIX_SIZE])
+{
+
+	int index = 16;
+	
+	addRoundKey(messageMatrix, keyMatrix);
+
+	for (size_t i = 1; i < 10; i++)
+	{
+		takeNextKey(keyMatrix, expandedKeys, index);
+		middleRounds(messageMatrix, expandedKeys, keyMatrix);
+	}
+
+	takeNextKey(keyMatrix, expandedKeys, index);
+	lastRound(messageMatrix, expandedKeys, keyMatrix);
 }
 
 void fillMatrix(int messageMatrix[MATRIX_SIZE][MATRIX_SIZE], char* message)
@@ -155,18 +310,7 @@ void fillMatrix(int messageMatrix[MATRIX_SIZE][MATRIX_SIZE], char* message)
 	}
 }
 
-void print(int messageMatrix[MATRIX_SIZE][MATRIX_SIZE])
-{
-	for (size_t row = 0; row < MATRIX_SIZE; row++)
-	{
-		for (size_t col = 0; col < MATRIX_SIZE; col++)
-		{
-			std::cout << std::hex << messageMatrix[row][col] << " ";
-		}
 
-		std::cout << std::endl;
-	}
-}
 
 int main()
 {
@@ -180,20 +324,16 @@ int main()
 	int keyMatrix[MATRIX_SIZE][MATRIX_SIZE];
 
 	fillMatrix(messageMatrix, message);
+
 	fillMatrix(keyMatrix, key);
 
-	addRoundKey(messageMatrix, keyMatrix);
+	int expandedKeys[EXPANDED_KEYS_SIZE];
+	KeyExpansion(key, expandedKeys);
 
-	subBytes(messageMatrix);
-
-	shiftRows(messageMatrix);
-
-	mixColumns(messageMatrix);
-
+	executeRounds(messageMatrix, expandedKeys, keyMatrix);
 	print(messageMatrix);
 
-	
 }
 
-/*Two One Nine Two
-Thats my Kung Fu*/
+//  Two One Nine Two
+//  Thats my Kung Fu
