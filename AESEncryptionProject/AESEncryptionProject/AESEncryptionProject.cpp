@@ -23,7 +23,7 @@ const unsigned char mul2[] =
 	0xfb,0xf9,0xff,0xfd,0xf3,0xf1,0xf7,0xf5,0xeb,0xe9,0xef,0xed,0xe3,0xe1,0xe7,0xe5
 };
 
-const unsigned char mul_3[] =
+const unsigned char mul3[] =
 {
 	0x00,0x03,0x06,0x05,0x0c,0x0f,0x0a,0x09,0x18,0x1b,0x1e,0x1d,0x14,0x17,0x12,0x11,
 	0x30,0x33,0x36,0x35,0x3c,0x3f,0x3a,0x39,0x28,0x2b,0x2e,0x2d,0x24,0x27,0x22,0x21,
@@ -63,37 +63,37 @@ const int sBox[][16] =
 	0x8c ,0xa1 ,0x89 ,0x0d ,0xbf ,0xe6 ,0x42 ,0x68 ,0x41 ,0x99 ,0x2d ,0x0f ,0xb0 ,0x54 ,0xbb ,0x16
 };
 
-const int multiplicationMatrix[][4]{ 02,03 };
-
-void DecToBinary(int number, int* binaryArray)
+void copyMatrix(int from[MATRIX_SIZE][MATRIX_SIZE], int to[MATRIX_SIZE][MATRIX_SIZE])
 {
-	int length = 8;
-	while (number != 0)
+	for (size_t i = 0; i < MATRIX_SIZE; i++)
 	{
-		binaryArray[length - 1] = number % 2;
-		length--;
-		number /= 2;
+		for (size_t j = 0; j < MATRIX_SIZE; j++)
+		{
+			to[i][j] = from[i][j];
+		}
 	}
 }
 
 void mixColumns(int messageMatrix[MATRIX_SIZE][MATRIX_SIZE])
 {
-	//need to create a matrix that is copy to the original one and take date from it
+	int matrixCopy[MATRIX_SIZE][MATRIX_SIZE];
+	copyMatrix(messageMatrix, matrixCopy);
+
 	for (size_t i = 0; i < MATRIX_SIZE; i++)
 	{
-		messageMatrix[0][i] = mul2[messageMatrix[0][i]] ^ mul_3[messageMatrix[1][i]] ^ messageMatrix[2][i] ^ messageMatrix[3][i];
+		messageMatrix[0][i] = mul2[matrixCopy[0][i]] ^ mul3[matrixCopy[1][i]] ^ matrixCopy[2][i] ^ matrixCopy[3][i];
 	}
 	for (size_t i = 0; i < MATRIX_SIZE; i++)
 	{
-		messageMatrix[1][i] = messageMatrix[0][i] ^ mul2[messageMatrix[1][i]] ^ mul_3[messageMatrix[2][i]] ^ messageMatrix[3][i];
+		messageMatrix[1][i] = matrixCopy[0][i] ^ mul2[matrixCopy[1][i]] ^ mul3[matrixCopy[2][i]] ^ matrixCopy[3][i];
 	}
 	for (size_t i = 0; i < MATRIX_SIZE; i++)
 	{
-		messageMatrix[2][i] = messageMatrix[0][i] ^ messageMatrix[1][i] ^ mul2[messageMatrix[2][i]] ^ mul_3[messageMatrix[3][i]];
+		messageMatrix[2][i] = matrixCopy[0][i] ^ matrixCopy[1][i] ^ mul2[matrixCopy[2][i]] ^ mul3[matrixCopy[3][i]];
 	}
 	for (size_t i = 0; i < MATRIX_SIZE; i++)
 	{
-		messageMatrix[3][i] = mul_3[messageMatrix[0][i]] ^ messageMatrix[1][i] ^ messageMatrix[2][i] ^ mul2[messageMatrix[3][i]];
+		messageMatrix[3][i] = mul3[matrixCopy[0][i]] ^ matrixCopy[1][i] ^ matrixCopy[2][i] ^ mul2[matrixCopy[3][i]];
 	}
 }
 
@@ -192,13 +192,7 @@ int main()
 
 	print(messageMatrix);
 
-	/*std::cout << int(mul2[47]) << std::endl;
-	std::cout << int(mul_3[175]);*/
 	
-	//std::cout << std::hex<< (99 ^ 94 ^ 234 ^ 162);
-
-	//std::cout<<std::hex<<(messageMatrix[0][0] ^ mul2[messageMatrix[1][0]] ^ mul_3[messageMatrix[2][0]] ^ messageMatrix[3][0]);
-
 }
 
 /*Two One Nine Two
