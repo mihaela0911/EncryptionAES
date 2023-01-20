@@ -1,5 +1,6 @@
 #pragma once
 const int SIZE = 17;
+const int MAX_SIZE = 256;
 const int MATRIX_SIZE = 4;
 const int EXPANDED_KEYS_SIZE = 176;
 const int KEY_SIZE = 16;

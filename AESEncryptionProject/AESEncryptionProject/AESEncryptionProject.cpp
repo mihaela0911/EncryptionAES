@@ -17,7 +17,7 @@ void print(int messageMatrix[][MATRIX_SIZE])
 void writeToFile(int messageMatrix[][MATRIX_SIZE], char* method)
 {
 	std::ofstream myfile;
-	myfile.open("output.txt");
+	myfile.open("output.txt", std::fstream::app);
 	myfile << method;
 
 	for (size_t row = 0; row < MATRIX_SIZE; row++)
@@ -39,6 +39,9 @@ void writeToFile(int messageMatrix[][MATRIX_SIZE], char* method)
 				myfile << (messageMatrix[col][row]) << " ";
 			}
 		}
+
+		myfile << std::endl;
+
 	}
 
 	myfile.close();
@@ -381,23 +384,41 @@ void readFromFile(char* message, char* key)
 	//taking the message and the key needed fot the encryption
 	while (myfile.good())
 	{
-		myfile.getline(message, SIZE);
+		myfile.getline(message, MAX_SIZE);
 		myfile.getline(key, SIZE);
 	}
 
 	myfile.close();
 }
 
-void encrypt()
+int getLength(char* message)
 {
-	char message[SIZE];
-	char key[SIZE];
-	readFromFile(message, key);
+	int index = 0;
 
+	while (message[index])
+	{
+		index++;
+	}
+
+	return index;
+}
+
+void addAdditionalLetters(char* message, int index)
+{
+	while (index % 16 != 0)
+	{
+		message[index++] = 'm';
+	}
+
+	message[index] = '\0';
+}
+
+void encryptPart(char* tempMessage, char* key)
+{
 	int messageMatrix[MATRIX_SIZE][MATRIX_SIZE];
 	int keyMatrix[MATRIX_SIZE][MATRIX_SIZE];
 
-	fillMatrix(messageMatrix, message);
+	fillMatrix(messageMatrix, tempMessage);
 	fillMatrix(keyMatrix, key);
 
 	int expandedKeys[EXPANDED_KEYS_SIZE];
@@ -409,8 +430,47 @@ void encrypt()
 
 	writeToFile(messageMatrix, method); //writing the encrypted method in file
 
-	std::cout << "Encrypted message: ";
-	print(messageMatrix);
+	/*std::cout << "Encrypted message: ";
+	print(messageMatrix);*/
+	
+}
+
+void encrypt()
+{
+	char message[MAX_SIZE];
+	char key[SIZE];
+	readFromFile(message, key);
+
+	int messageLength = getLength(message);
+
+	int cycles = messageLength % 16 == 0 ? messageLength / 16 : messageLength / 16 + 1;
+
+	int index = 0;
+
+	for (size_t i = 0; i < cycles; i++)
+	{
+		char tempMessage[SIZE]{ '\0' };
+		int tempMessageIndex = 0;
+
+		for (size_t i = 0; i < 16; i++)
+		{
+			tempMessage[tempMessageIndex++] = message[index++];
+
+			if (!message[index])
+			{
+				break;
+			}
+		}
+
+		tempMessage[tempMessageIndex] = '\0';
+
+		if (getLength(tempMessage) < 16)
+		{
+			addAdditionalLetters(tempMessage, getLength(tempMessage));
+		}
+
+		encryptPart(tempMessage, key);
+	}
 	std::cout << std::endl;
 	std::cout << "Message was encrypted in \'output.txt\'" << std::endl;
 }

@@ -1,4 +1,3 @@
 ﻿  AESEncryptionProject.cpp
-  GlobalConstants.cpp
-  Generating Code...
+C:\Users\Michaela\Documents\Mihaela\uni\Project_Pract\AESEncryptionProject\AESEncryptionProject\AESEncryptionProject.cpp(450,23): warning C4018: '<': signed/unsigned mismatch
   AESEncryptionProject.vcxproj -> C:\Users\Michaela\Documents\Mihaela\uni\Project_Pract\AESEncryptionProject\Debug\AESEncryptionProject.exe
