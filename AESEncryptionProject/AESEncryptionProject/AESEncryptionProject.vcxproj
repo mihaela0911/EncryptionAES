@@ -140,10 +140,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AESEncryptionProject.cpp" />
+    <ClCompile Include="CommonMethods.cpp" />
+    <ClCompile Include="DecryptMethods.cpp" />
     <ClCompile Include="EncryptMethods.cpp" />
     <ClCompile Include="GlobalConstants.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CommonMethods.h" />
+    <ClInclude Include="DecryptMethods.h" />
     <ClInclude Include="EncryptMethods.h" />
     <ClInclude Include="GlobalConstants.h" />
   </ItemGroup>
